@@ -4,8 +4,6 @@ import (
 	"errors"
 	"regexp"
 	"testing"
-
-	"github.com/codeship/janus/src/mt"
 )
 
 type stubRetryableError struct {
@@ -28,8 +26,12 @@ func TestRetryHandlerTryWithSuccess(t *testing.T) {
 		return nil
 	}
 	retry, err := handler.Try(successfulFunc)
-	mt.Refute(t, retry)
-	mt.AssertEqual(t, err, nil)
+	if retry {
+		t.Errorf("retry was true, expected false")
+	}
+	if err != nil {
+		t.Errorf("error was %s, expected nil", err.Error())
+	}
 }
 
 func TestRetryHandlerTryNonRetryable(t *testing.T) {
@@ -39,8 +41,12 @@ func TestRetryHandlerTryNonRetryable(t *testing.T) {
 		return nonRetryableError
 	}
 	retry, err := handler.Try(nonRetryableFunc)
-	mt.Refute(t, retry)
-	mt.AssertEqual(t, err, nonRetryableError)
+	if retry {
+		t.Errorf("retry was true, expected false")
+	}
+	if err != nonRetryableError {
+		t.Errorf("error was %s, expected %s", err.Error(), nonRetryableError.Error())
+	}
 }
 
 func TestRetryHandlerTryRetryable(t *testing.T) {
@@ -59,21 +65,42 @@ func TestRetryHandlerTryRetryable(t *testing.T) {
 	}
 
 	retry, err := handler.Try(retryableFunc)
-	mt.Assert(t, retry)
-	mt.AssertEqual(t, receivedCounts[0], 0)
-	mt.AssertEqual(t, len(receivedCounts), 1)
-	mt.AssertEqual(t, err, retryableError)
-
+	if !retry {
+		t.Errorf("retry was false, expected true")
+	}
+	if receivedCounts[0] != 0 {
+		t.Errorf("receivedCounts[0] was %d, expected %d", receivedCounts[0], 0)
+	}
+	if len(receivedCounts) != 1 {
+		t.Errorf("len(receivedCounts) was %d, expected %d", len(receivedCounts), 1)
+	}
+	if err != retryableError {
+		t.Errorf("error was %s, expected %s", err.Error(), retryableError.Error())
+	}
 	retry, err = handler.Try(retryableFunc)
-	mt.Assert(t, retry)
-	mt.AssertEqual(t, receivedCounts[1], 1)
-	mt.AssertEqual(t, len(receivedCounts), 2)
-	mt.AssertEqual(t, err, retryableError)
-
+	if !retry {
+		t.Errorf("retry was false, expected true")
+	}
+	if receivedCounts[1] != 1 {
+		t.Errorf("receivedCounts[1] was %d, expected %d", receivedCounts[1], 1)
+	}
+	if len(receivedCounts) != 2 {
+		t.Errorf("len(receivedCounts) was %d, expected %d", len(receivedCounts), 2)
+	}
+	if err != retryableError {
+		t.Errorf("error was %s, expected %s", err.Error(), retryableError.Error())
+	}
 	retry, err = handler.Try(retryableFunc)
-	mt.Refute(t, retry)
-	mt.AssertEqual(t, len(receivedCounts), 2)
-	mt.AssertEqual(t, err, retryableError)
+	if retry {
+		t.Errorf("retry was true, expected false")
+	}
+
+	if len(receivedCounts) != 2 {
+		t.Errorf("len(receivedCounts) was %d, expected %d", len(receivedCounts), 2)
+	}
+	if err != retryableError {
+		t.Errorf("error was %s, expected %s", err.Error(), retryableError.Error())
+	}
 }
 
 func TestRetryHandlerTryRetryableEventualSuccess(t *testing.T) {
@@ -95,15 +122,29 @@ func TestRetryHandlerTryRetryableEventualSuccess(t *testing.T) {
 	}
 
 	retry, err := handler.Try(retryableFunc)
-	mt.Assert(t, retry)
-	mt.AssertEqual(t, receivedCounts[0], 0)
-	mt.AssertEqual(t, len(receivedCounts), 1)
-	mt.AssertEqual(t, err, retryableError)
+	if !retry {
+		t.Errorf("retry was false, expected true")
+	}
+	if receivedCounts[0] != 0 {
+		t.Errorf("receivedCounts[0] was %d, expected %d", receivedCounts[0], 0)
+	}
 
+	if len(receivedCounts) != 1 {
+		t.Errorf("len(receivedCounts) was %d, expected %d", len(receivedCounts), 1)
+	}
+	if err != retryableError {
+		t.Errorf("error was %s, expected %s", err.Error(), retryableError.Error())
+	}
 	retry, err = handler.Try(retryableFunc)
-	mt.Refute(t, retry)
-	mt.AssertEqual(t, len(receivedCounts), 1)
-	mt.AssertEqual(t, err, nil)
+	if retry {
+		t.Errorf("retry was true, expected false")
+	}
+	if len(receivedCounts) != 1 {
+		t.Errorf("len(receivedCounts) was %d, expected %d", len(receivedCounts), 1)
+	}
+	if err != nil {
+		t.Errorf("error was %s, expected nil", err.Error())
+	}
 }
 
 func TestRetryHandlerTryRetryableEventualFailure(t *testing.T) {
@@ -125,15 +166,28 @@ func TestRetryHandlerTryRetryableEventualFailure(t *testing.T) {
 	}
 
 	retry, err := handler.Try(retryableFunc)
-	mt.Assert(t, retry)
-	mt.AssertEqual(t, receivedCounts[0], 0)
-	mt.AssertEqual(t, len(receivedCounts), 1)
-	mt.AssertEqual(t, err, retryableError)
-
+	if !retry {
+		t.Errorf("retry was false, expected true")
+	}
+	if receivedCounts[0] != 0 {
+		t.Errorf("receivedCounts[0] was %d, expected %d", receivedCounts[0], 0)
+	}
+	if len(receivedCounts) != 1 {
+		t.Errorf("len(receivedCounts) was %d, expected %d", len(receivedCounts), 1)
+	}
+	if err != retryableError {
+		t.Errorf("error was %s, expected %s", err.Error(), retryableError.Error())
+	}
 	retry, err = handler.Try(retryableFunc)
-	mt.Refute(t, retry)
-	mt.AssertEqual(t, len(receivedCounts), 1)
-	mt.AssertEqual(t, err, baseError)
+	if retry {
+		t.Errorf("retry was true, expected false")
+	}
+	if len(receivedCounts) != 1 {
+		t.Errorf("len(receivedCounts) was %d, expected %d", len(receivedCounts), 1)
+	}
+	if err != baseError {
+		t.Errorf("error was %s, expected %s", err.Error(), baseError.Error())
+	}
 }
 
 func TestDoWithRetry(t *testing.T) {
@@ -144,8 +198,12 @@ func TestDoWithRetry(t *testing.T) {
 	}
 
 	err := DoWithRetry(retryableFunc)
-	mt.AssertEqual(t, err, nil)
-	mt.AssertEqual(t, timesCalled, 1)
+	if err != nil {
+		t.Errorf("error was %s, expected nil", err.Error())
+	}
+	if timesCalled != 1 {
+		t.Errorf("timesCalled was %d, expected %d", timesCalled, 1)
+	}
 }
 
 func TestDoWithRetryEventualFailure(t *testing.T) {
@@ -163,7 +221,9 @@ func TestDoWithRetryEventualFailure(t *testing.T) {
 	}
 
 	err := DoWithRetry(retryableFunc)
-	mt.AssertEqual(t, err, baseError)
+	if err != baseError {
+		t.Errorf("error was %s, expected %s", err.Error(), baseError.Error())
+	}
 }
 
 func TestDoWithRetryEventualSuccess(t *testing.T) {
@@ -181,7 +241,9 @@ func TestDoWithRetryEventualSuccess(t *testing.T) {
 	}
 
 	err := DoWithRetry(retryableFunc)
-	mt.AssertEqual(t, err, nil)
+	if err != nil {
+		t.Errorf("error was %s, expected nil", err.Error())
+	}
 }
 
 func TestWrapRetryableErrors(t *testing.T) {
@@ -194,8 +256,12 @@ func TestWrapRetryableErrors(t *testing.T) {
 	})
 
 	_, ok := err1.(RetryableError)
-	mt.AssertEqual(t, err.Error(), err1.Error())
-	mt.Assert(t, ok)
+	if err.Error() != err1.Error() {
+		t.Errorf("error was %s, expected %s", err.Error(), err1.Error())
+	}
+	if !ok {
+		t.Errorf("ok was false, expected true")
+	}
 }
 
 func TestWrapRetryableFailure(t *testing.T) {
@@ -208,8 +274,12 @@ func TestWrapRetryableFailure(t *testing.T) {
 	})
 
 	_, ok := err1.(RetryableError)
-	mt.AssertEqual(t, err.Error(), err1.Error())
-	mt.Refute(t, ok)
+	if err != err1 {
+		t.Errorf("error was %s, expected %s", err.Error(), err1.Error())
+	}
+	if ok {
+		t.Errorf("ok was true, expected false")
+	}
 }
 
 func TestWrapRetryableNil(t *testing.T) {
@@ -220,5 +290,7 @@ func TestWrapRetryableNil(t *testing.T) {
 		return NewBackoffRetryableError(e, 1)
 	})
 
-	mt.AssertEqual(t, err1, nil)
+	if err1 != nil {
+		t.Errorf("error was %s, expected nil", err1.Error())
+	}
 }
