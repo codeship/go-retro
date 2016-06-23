@@ -1,6 +1,6 @@
 ## Retro - Retryable errors in Golang
 
-[ ![Codeship Status for codeship/retro](https://codeship.com/projects/9b134140-1aff-0134-ce79-0e8ad2af7d49/status?branch=master)](https://codeship.com/projects/159527)
+[ ![Codeship Status for codeship/go-retro](https://codeship.com/projects/7a5b0350-1b79-0134-e8c7-265a91e3d879/status?branch=master)](https://codeship.com/projects/159666)
 
 Retry allows you to wrap failure prone sections of code in retry blocks, and conditionally retry different types of errors. To retry an error within a block, simply return a custom error type matching the provided interface. By default, wrapping code in a retro block will have no effect.
 
