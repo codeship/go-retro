@@ -56,3 +56,7 @@ These errors retry X times every Y seconds. To create a static retryable error u
 #### Backoff retryable errors
 
 These errors use quadrilateral equation based on Sidekiq retries to increasingly space out subsequent attempts. To create a backoff retryable error use `retro.NewBackoffRetryableError(err error, maxAttempts int)`. For generic errors you can reference a shared variable, for dynamic errors you can create an error with the relevant base error message each time. Error retrying state is stored in the retro loop, not the RetryableError.
+
+### Retry attempts
+
+The retro retry loop will keep track of how many times it has looped. Any time it gets an error it compares the state against the allowed retry conditions for the latest error. This means that should the loop initially retry with an error allowing ten retries, if the second error indicates only two retries or fewer are allowed, then the loop will no longer retry since it has already retried twice.
