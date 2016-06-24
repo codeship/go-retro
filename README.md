@@ -4,44 +4,20 @@
 
 Retry allows you to wrap failure prone sections of code in retry blocks, and conditionally retry different types of errors. To retry an error within a block, simply return a custom error type matching the provided interface. By default, wrapping code in a retro block will have no effect.
 
-### Example
+### Usage
 
 ```
-ErrNetwork := retro.NewStaticRetryableError(errors.New("Network error!"), 3, 10)
-
+// Wrap your code block with retro
 finalErr := retro.DoWithRetry(func() error{
     // Hit an external API
-    sales, err := api.GetSalesForUser(user)
-    if err != nil {
-        // if its an EOF error
-        if err.Error() == "EOF" {
-            // return a generic retryable error
-            return ErrNetwork
-        } else {
-          // otherwise return a custom retryable error retrying 5 times, once every 30 seconds
-          return retro.NewStaticRetryableError(err, 5, 30)
-        }
-    }
-
-    // Store sales in DB, do not retry
-    if err := db.SaveSales(sales); err != nil {
-        return err
-    }
-
-    invoices, err := api.GetInvoicesForSales(sales)
-    if err != nil {
-        // if its an EOF error
-        if err.Error() == "EOF" {
-            // return a generic retryable error
-            return ErrNetwork
-        } else {
-          // otherwise return a custom retryable error retrying 5 times using the Sidekiq backoff equation
-          return retro.NewBackoffRetryableError(err, 5)
-        }
-    }
-    return nil
+    return DoMyFunc(args)
 })
 ```
+
+Any errors matching the `RetryableError` interface bubbled up will automatically retry the code block.
+
+
+For more detailed examples see the [examples folder](https://github.com/codeship/go-retro/blob/master/examples).
 
 Independent sections of code within a chain can be wrapped conditionally in retro blocks as needed. You should always try and keep retry blocks as small as possible to reduce code and requests being re-run.
 
