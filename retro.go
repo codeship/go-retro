@@ -59,6 +59,29 @@ func NewStaticRetryableError(err error, maxAttempts, waitSeconds int) RetryableE
 	return &staticRetryableError{err, maxAttempts, time.Duration(waitSeconds)}
 }
 
+type logarithmicRetryableError struct {
+	error
+	maxAttempts int
+	baseOffset  float64
+	scale       float64
+	power       float64
+}
+
+func (err *logarithmicRetryableError) MaxAttempts() int {
+	return err.maxAttempts
+}
+
+func (err *logarithmicRetryableError) Wait(count int) {
+	backoffFloat := err.scale*math.Log(math.Pow(float64(count), err.power)) + err.baseOffset
+	time.Sleep(time.Duration(backoffFloat) * time.Second)
+}
+
+// NewLogarithmicRetryableError creates a RetryableError which will retry up
+// to maxAttempts times, with a sleep pattern defined by a logarithmic curve
+func NewLogarithmicRetryableError(err error, maxAttempts int, baseOffset, scale, power float64) RetryableError {
+	return &logarithmicRetryableError{err, maxAttempts, baseOffset, scale, power}
+}
+
 // DoWithRetry will execute a function as many times as is dictated by any
 // retryable errors propagated by the function
 func DoWithRetry(f func() error) error {
