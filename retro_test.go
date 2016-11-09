@@ -294,3 +294,39 @@ func TestWrapRetryableNil(t *testing.T) {
 		t.Errorf("error was %s, expected nil", err1.Error())
 	}
 }
+
+func TestBackoffRetryableError(t *testing.T) {
+	baseErr := errors.New("foobar")
+	maxAttempts := 10
+	err := NewBackoffRetryableError(baseErr, maxAttempts)
+	if err == nil {
+		t.Error("retryable error was nil")
+	}
+	if maxAttempts != err.MaxAttempts() {
+		t.Errorf("Incorrect MaxAttempts returned, expected %d, received %d", maxAttempts, err.MaxAttempts())
+	}
+}
+
+func TestStaticRetryableError(t *testing.T) {
+	baseErr := errors.New("foobar")
+	maxAttempts := 10
+	err := NewStaticRetryableError(baseErr, maxAttempts, 4)
+	if err == nil {
+		t.Error("retryable error was nil")
+	}
+	if maxAttempts != err.MaxAttempts() {
+		t.Errorf("Incorrect MaxAttempts returned, expected %d, received %d", maxAttempts, err.MaxAttempts())
+	}
+}
+
+func TestLogarithmicRetryableError(t *testing.T) {
+	baseErr := errors.New("foobar")
+	maxAttempts := 10
+	err := NewLogarithmicRetryableError(baseErr, maxAttempts, 1, 2, 3)
+	if err == nil {
+		t.Error("retryable error was nil")
+	}
+	if maxAttempts != err.MaxAttempts() {
+		t.Errorf("Incorrect MaxAttempts returned, expected %d, received %d", maxAttempts, err.MaxAttempts())
+	}
+}
